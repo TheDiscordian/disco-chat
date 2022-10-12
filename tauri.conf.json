@@ -58,11 +58,12 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 795,
         "resizable": true,
         "title": "Disco Chat",
-        "width": 1024,
-        "minWidth": 992
+        "width": 1265,
+        "minWidth": 992,
+        "minHeight": 789
       }
     ]
   }
