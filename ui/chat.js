@@ -78,7 +78,6 @@ async function processBacklogSignal(msg) {
 			}
 		}
 		if (outMsgs.length > 0) {
-			//console.log(outMsgs);
 			await ipfs.pubsub.publish("BL_"+prefix+where, JSON.stringify({"type": "rep", "msgs": JSON.stringify(outMsgs), "timestamp": new Date().getTime()/10}));
 		}
 	} else if (json.type == "rep") {
@@ -262,16 +261,21 @@ function freeAllLooseMedia() {
  * @param {number} limit size limit of image in bytes
  * @returns ObjectURL
  */
-async function loadImgURL(url, mime, limit) {
+async function loadImgURL(url, mime, limit, timeout) {
 	if (limit == undefined) {
 		limit = userIconFileSizeLimit;
+		timeout = '5s';
+	} else {
+		if (timeout == undefined) {
+			timeout = '5m';
+		}
 	}
 	// Use this to createObjectURL. Free objects when users leave.
 	if (url == "" || url == null || url == undefined) {
 		return;
 	}
 	const content = [];
-	for await (const chunk of ipfs.cat(url, {length:limit})) {
+	for await (const chunk of ipfs.cat(url, {length:limit,timeout:timeout})) {
 		content.push(chunk);
 	}
 	return URL.createObjectURL(new Blob(content, {type: mime}));
@@ -636,9 +640,13 @@ async function injectImage(ev, cid, mime) {
 	}
 	let src = target.src.slice(target.src.length-4);
 	if (src != ".gif") { return }
-	inlineImg = await loadImgURL(cid, mime, inlineImageFileSizeLimit);
-	inMemory.push(inlineImg);
-	target.src = inlineImg;
+	try {
+		inlineImg = await loadImgURL(cid, mime, inlineImageFileSizeLimit);
+		inMemory.push(inlineImg);
+		target.src = inlineImg;
+	} catch (e) {
+		console.log("Failed to load image: ", e);
+	}
 }
 
 // scrollMsgs is attached to the message area. It's used for grabbing local backlog and loading it if available when
@@ -751,8 +759,6 @@ function processMsg(msg, backlog) {
 	if (msg.id == undefined) {
 		msg.id = msg.from.toString();
 	}
-	console.log("processingMsg:");
-	console.log(msg);
 	let msgid = msg.id + msg.sequenceNumber.toString();
 	if (msgIds.has(msgid)) {
 		console.log("!REPEATED MESSAGE FOUND " + msg.id);
@@ -771,8 +777,6 @@ function processMsg(msg, backlog) {
 	try {
 		json = new TextDecoder().decode(msg.data);
 	} catch (e) {
-		//console.log(e);
-		//console.log(msg.data);
 		json = msg.data;
 	}
 	let msgObj = JSON.parse(json);
@@ -788,8 +792,6 @@ function processMsg(msg, backlog) {
 		console.log(msg);
 		return null;
 	}
-	console.log("processedMsg:");
-	console.log(msgObj);
 	
 	return msgObj;
 }
@@ -800,8 +802,6 @@ async function out(msg) {
 	if (msgObj == null || isEmpty(msgObj.nick) || (isEmpty(msgObj.msg) && isEmpty(msgObj.inlineImg) && isEmpty(msgObj.inlineVid))) {
 		return;
 	}
-	console.log("outing msg:");
-	console.log(msgObj);
 	let peer = await updatePeer(msgObj.id, msgObj.nick, msgObj.img, msg.topic);
 
 	if (msgObj.id != me && typeof(msgObj.msg) == "string" && msgObj.msg.toLowerCase().includes(currentNick.toLowerCase())) {
@@ -874,7 +874,6 @@ async function sendImage(ev) {
 	} else {
 		let cid = await ipfs.add(imageSelection.files[0]);
 		let msg = {"nick":currentNick, "inlineImg": cid.path, "img": currentImg, "mime": imageSelection.files[0].type, "timestamp":Math.floor(new Date().getTime()/10)};
-		console.log(msg);
 		sendmsg(msg, currentRoom);
 		imageSelection.value = "";
 		$('#shareImageMenu').modal("hide");
@@ -983,13 +982,11 @@ async function changeChan(to, first) {
 			await askForBacklog(to, new Date(new Date().getTime()/10), "");
 		}
 	}
-	
 	c.innerHTML = innerHTML + c.innerHTML;
 	room.set("_unread", 0);
 	roomMap.set(prefix+to, room);
 	c.scrollTop = c.scrollHeight;
 	setTimeout(function(){c.scrollTop = c.scrollHeight;}, 250);
-	console.log("About to update me:" + me);
 	room.set(me, await updatePeer(me, currentNick, currentImg, ""));
 	updateRoomList();
 	updateUserList();
@@ -1006,6 +1003,9 @@ async function changeChan(to, first) {
 async function checkalive() {
 	now = new Date().getTime();
 	let subs = await ipfs.pubsub.ls();
+	if (subs.indexOf(prefix+"pulse-circuit") == -1) {
+		await ipfs.pubsub.subscribe(prefix+"pulse-circuit", processPulse);
+	}
 	for (let i = 0;i < roomSubscriptions.length;i++) {
 		if (subs.indexOf(roomSubscriptions[i]) == -1) {
 			await ipfs.pubsub.subscribe(roomSubscriptions[i], out);
@@ -1087,7 +1087,12 @@ async function updatePeer(id, nick, img, topic) {
 				} else {
 					img = peer.img;
 				}
-				peer.imgURL = await loadImgURL(img);
+				// FIXME remove await, increase timeout
+				try {
+					peer.imgURL = await loadImgURL(img);
+				} catch {
+					peer.imgURL = "./AvatarDefault.png";
+				}
 			}
 		}
 	} else {
@@ -1096,7 +1101,12 @@ async function updatePeer(id, nick, img, topic) {
 		}
 		peer = { lastSeen: new Date().getTime(), img: img, nick: nick };
 		if (!isEmpty(img)) {
-			peer.imgURL = await loadImgURL(img);
+			// FIXME remove await, increase timeout
+			try {
+				peer.imgURL = await loadImgURL(img);
+			} catch {
+				peer.imgURL = "./AvatarDefault.png";
+			}
 		} else {
 			peer.imgURL = "./AvatarDefault.png";
 		}
@@ -1247,13 +1257,18 @@ async function onload() {
 	if (_maxMsgsToStore != null) { maxMsgsToStore = _maxMsgsToStore; }
 	let _maxMsgsToLoad = await localforage.getItem("maxMsgsToLoad");
 	if (_maxMsgsToLoad != null) { maxMsgsToLoad = _maxMsgsToLoad; }
-	
+
 	ipfs = await IpfsHttpClient.create({url: "http://127.0.0.1:5001", timeout: '5m'});
 	// add bootstraps for next time, and attempt connection just in case we're not already connected
 	//await dobootstrap(false);
 
 	// get our peerid
-	me = await ipfs.id();
+	try {	
+		me = await ipfs.id();
+	} catch {
+		setTimeout(function(){onload()}, 1000);
+		return;
+	}
 	me = me.id.toString();	
 
 	document.getElementById("personalNickDisplay").onclick = function(event){showUserInfoBox(event, me)};

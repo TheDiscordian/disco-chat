@@ -14,6 +14,12 @@ async fn main() {
     init = init.args(["init",
       "--repo-dir", ".discochat"]);
     init.output().unwrap();
+    let mut configure = Command::new_sidecar("kubo").unwrap();
+    configure = configure.args(["config", "--json",
+      "--repo-dir", ".discochat",
+      "API.HTTPHeaders.Access-Control-Allow-Origin",
+      "[\"tauri://localhost\"]"]);
+    configure.output().unwrap();
   }
   let mut daemon = Command::new_sidecar("kubo").unwrap();
   daemon = daemon.args(["daemon",
