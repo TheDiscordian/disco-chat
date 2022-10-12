@@ -285,12 +285,17 @@ async function getVidSize(cid) {
 	if (cid == "" || cid == null || cid == undefined) {
 		return;
 	}
+	let total = -1;
 	for await (const file of ipfs.ls(cid)) {
 		if (file.size > 0) {
-			return file.size;
+			if (total < 0) {
+				total = file.size;
+			} else {
+				total += file.size;
+			}
 		}
 	}
-	return -1;
+	return total;
 }
 
 async function loadVidURL(url, mime, limit) {
