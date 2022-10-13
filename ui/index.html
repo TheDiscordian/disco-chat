@@ -30,10 +30,10 @@
 <span id="status-ball" style="color:red;position:fixed;left:0.2em;">⬤<span id="personalNickDisplay" class="personalNickDisplay"></span></span>
 <span id="version-display" class="version-display"></span>
 
-<div class="text-center" style="background-color:#223344;margin-bottom:0;height:11vh;min-height:6em;flex: 0 1 auto;border-radius:0.3rem;">
+<div class="text-center" style="background-color:#223344;margin-bottom:0;height:75pt;flex: 0 1 auto;border-radius:0.3rem;">
 	<div style="margin-top:1em;">
 	<h1>disco chat (<span style="color:lime;" id="peerCount">0</span>)</h1>
-	<p>MOTD: Some basic backlog support added o.o. Check out the <a href="./mobile.html" style="text-decoration:underline;">mobile version</a>.</p>
+	<p>MOTD: Disco Chat desktop is making huge progress!</p>
 	</div>
 </div>
 
@@ -240,7 +240,7 @@
 			<hr class="d-sm-none">
 		</div>
 		<div class="col-lg-7" id="main">
-			<p style="overflow-y: auto; overflow-x:hidden; margin: 0; width: 100%;flex: 1 1 0; max-height:81vh;" onscroll="scrollMsgs(event);" id="chat">
+			<p style="overflow-y: auto; overflow-x:hidden; margin: 0; width: 100%;flex: 1 1 0; max-height:calc(100vh - 75pt - 3em);" onscroll="scrollMsgs(event);" id="chat">
 			</p>
 		</div>
 		<div class="col-sm-3">
@@ -255,7 +255,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="row" style="position:fixed;bottom:0.5em;width:100%;margin:auto;">
+	<div class="row" style="position:fixed;bottom:0.5em;width:100%;margin:auto;height:3em;">
 		<div class="col-sm-2 input-field">
 			<form><button type="button" class="form-control btn btn-primary" onclick="toggleOptionsMenu();">Settings / Options</button></form>
 			<div class="list-group optionsMenu" id="optionsMenu" hidden>
