@@ -4,14 +4,12 @@ const userIconFileSizeLimit = 2097152; // limit for user icons
 const inlineImageFileSizeLimit = 10485760; // limit for inline images
 const inlineVideoFileSizeLimit = 134217728; // limit for inline videos
 const maxNickLength = 100; // limit for user nicks (truncated if over) TODO move info like this into "metadata" and set a limit of like 100KB on that, ignore or drop peers that go over
-const bootstraps = [ '/dns6/ipfs.thedisco.zone/tcp/4430/wss/p2p/12D3KooWCyiHXACQpZxnvLTHXjFcFPPv69qPrX6svgdcmREZuS8A', '/dns4/ipfs.thedisco.zone/tcp/4430/wss/p2p/12D3KooWCyiHXACQpZxnvLTHXjFcFPPv69qPrX6svgdcmREZuS8A' ];
 const prefix = "discochat+"; // unique identifier for protocol. Called prefix because it's *usually* at the beginning, not because it's required to be. Changing this just makes it really easy to roll your own protocol.
 const messageExpiry = 300; // time in seconds to consider message valid
 const maxMsgsToSend = 300; // max number of messages to send in one burst upon a request for backlog
 
 var lastAlive = 0;	// last keep-alive we saw from a relay
 var lastPeer = 0; 	// last keep-alive we saw from another peer
-var lastBootstrap = 0; // used for tracking when we last attempted to bootstrap (likely to reconnect to a relay)
 var ipfs;
 var me; // our peerID
 var peerMap = new Map(); // track total peer count
@@ -1033,7 +1031,6 @@ async function checkalive() {
 		} else {
 			document.getElementById("status-ball").style.color = "yellow";
 		}
-		dobootstrap(true); // sometimes we appear to be connected to the bootstrap nodes, but we're not, so let's try to reconnect
 	} else {
 		document.getElementById("status-ball").style.color = "lime";
 	}
@@ -1216,28 +1213,6 @@ async function processAnnounce(addr) {
 	}
 }
 
-// if reconnect is true, it'll first attempt to disconnect from the bootstrap nodes
-async function dobootstrap(reconnect) {
-	return;
-	now = new Date().getTime();
-	if (now-lastBootstrap < 60000) { // don't try to bootstrap again if we just tried within the last 60 seconds
-		return;
-	}
-	lastBootstrap = now;
-	for (i in bootstraps) {
-		if (reconnect) {
-			try {
-				await ipfs.swarm.disconnect(bootstraps[i]);
-			} catch (e) {
-				console.log(e);
-			}
-		} else {
-			await ipfs.bootstrap.add(bootstraps[i]);
-		}
-		await ipfs.swarm.connect(bootstraps[i], {timeout:60000});
-	}
-}
-
 function lines2rows(ev) {
 	if (ev == undefined) {
 		return
@@ -1275,8 +1250,6 @@ async function onload() {
 	if (_maxMsgsToLoad != null) { maxMsgsToLoad = _maxMsgsToLoad; }
 
 	ipfs = await IpfsHttpClient.create({url: "http://127.0.0.1:5001", timeout: '5m'});
-	// add bootstraps for next time, and attempt connection just in case we're not already connected
-	//await dobootstrap(false);
 
 	// get our peerid
 	try {	
