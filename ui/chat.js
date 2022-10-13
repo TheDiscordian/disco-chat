@@ -42,10 +42,17 @@ var maxBacklogToSend = 500; // max messages to transmit back for backlog
 var backlogLock = 0;
 
 async function joinBacklogChan(where) {
+	if (roomSubscriptions.indexOf("BL_"+prefix+where) == -1) {
+		roomSubscriptions.push("BL_"+prefix+where);
+	}
 	await ipfs.pubsub.subscribe("BL_"+prefix+where, processBacklogSignal);
 }
 
 async function leaveBacklogChan(where) {
+	let roomIndex = roomSubscriptions.indexOf("BL_"+prefix+where);
+	if (roomIndex != -1) {
+		roomSubscriptions.pop(roomIndex);
+	}
 	await ipfs.pubsub.unsubscribe("BL_"+prefix+where);
 }
 
@@ -1008,14 +1015,18 @@ async function changeChan(to, first) {
 async function checkalive() {
 	now = new Date().getTime();
 	let subs = await ipfs.pubsub.ls();
+
+	// Check if we're still subscribed to what we should be.
 	if (subs.indexOf(prefix+"pulse-circuit") == -1) {
 		await ipfs.pubsub.subscribe(prefix+"pulse-circuit", processPulse);
 	}
 	for (let i = 0;i < roomSubscriptions.length;i++) {
 		if (subs.indexOf(roomSubscriptions[i]) == -1) {
+			// re-join channel
 			await ipfs.pubsub.subscribe(roomSubscriptions[i], out);
 		}
 	}
+
 	if (now-lastAlive >= 35000) {
 		if (now-lastPeer >= 35000) {
 			document.getElementById("status-ball").style.color = "red";
