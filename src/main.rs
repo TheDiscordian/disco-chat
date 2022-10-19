@@ -31,6 +31,7 @@ async fn main() {
   let mut daemon = Command::new_sidecar("kubo").unwrap();
   daemon = daemon.args(["daemon",
     "--repo-dir", REPO_PATH,
+    "--enable-gc",
     "--enable-pubsub-experiment"]);
   let (mut rx, kubo) = daemon.spawn().unwrap();
 
