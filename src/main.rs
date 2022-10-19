@@ -7,23 +7,30 @@ use tauri::api::process::CommandEvent;
 use std::path::Path;
 use std::process::exit;
 
+/* Modifiable settings */
+
+const REPO_PATH: &str = ".discochat";
+
+/* -- Settings end  -- */
+
 #[tokio::main]
 async fn main() {
   if !Path::new(".discochat").is_dir() {
     let mut init = Command::new_sidecar("kubo").unwrap();
     init = init.args(["init",
-      "--repo-dir", ".discochat"]);
+      "--repo-dir", REPO_PATH]);
     init.output().unwrap();
-    let mut configure = Command::new_sidecar("kubo").unwrap();
-    configure = configure.args(["config", "--json",
-      "--repo-dir", ".discochat",
+
+    init = Command::new_sidecar("kubo").unwrap();
+    init = init.args(["config", "--json",
+      "--repo-dir", REPO_PATH,
       "API.HTTPHeaders.Access-Control-Allow-Origin",
       "[\"tauri://localhost\"]"]);
-    configure.output().unwrap();
+    init.output().unwrap();
   }
   let mut daemon = Command::new_sidecar("kubo").unwrap();
   daemon = daemon.args(["daemon",
-    "--repo-dir", ".discochat",
+    "--repo-dir", REPO_PATH,
     "--enable-pubsub-experiment"]);
   let (mut rx, kubo) = daemon.spawn().unwrap();
 
