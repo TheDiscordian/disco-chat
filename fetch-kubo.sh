@@ -4,14 +4,10 @@ ARCH=$(arch)
 
 if [ $ARCH = 'x86_64' ]
 then
-	echo "amd64";
+	ARCH="amd64";
 fi
 
-OS=$(rustc -Vv | grep host | cut -f2 -d'-')
-if [ $OS = "apple" ]
-then
-	OS="darwin"
-fi
+OS=$(rustc -Vv | grep host | cut -f3 -d'-')
 DOUBLE=$OS-$ARCH
 TRIPLE=$(rustc -Vv | grep host | cut -f2 -d' ')
 
