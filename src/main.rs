@@ -24,8 +24,13 @@ async fn main() {
     init = Command::new_sidecar("kubo").unwrap();
     init = init.args(["config", "--json",
       "--repo-dir", REPO_PATH,
-      "API.HTTPHeaders.Access-Control-Allow-Origin",
-      "[\"tauri://localhost\"]"]);
+      "API.HTTPHeaders.Access-Control-Allow-Origin", "[\"tauri://localhost\"]"]);
+    init.output().unwrap();
+
+    init = Command::new_sidecar("kubo").unwrap();
+    init = init.args(["config", "--json",
+      "--repo-dir", REPO_PATH,
+      "Ipns.UsePubsub", "true"]);
     init.output().unwrap();
   }
   let mut daemon = Command::new_sidecar("kubo").unwrap();
