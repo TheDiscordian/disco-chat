@@ -32,6 +32,12 @@ async fn main() {
       "--repo-dir", REPO_PATH,
       "Ipns.UsePubsub", "true"]);
     init.output().unwrap();
+
+    init = Command::new_sidecar("kubo").unwrap();
+    init = init.args(["config", "--json",
+      "--repo-dir", REPO_PATH,
+      "Addresses.Gateway", "null"]);
+    init.output().unwrap();
   }
   let mut daemon = Command::new_sidecar("kubo").unwrap();
   daemon = daemon.args(["daemon",
