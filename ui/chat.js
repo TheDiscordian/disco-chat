@@ -350,13 +350,21 @@ function getPeerAvatarURL(peer) {
 	return getAvatarURL(p.imgURL);
 }
 
+function getPeerNick(peer) {
+	let p = peerMap.get(peer);
+	if (p == undefined) {
+		return "Anonymous";
+	}
+	return p.nick;
+}
+
 async function showUserUpdateMenu() {
 	$('#userUpdateMenu').modal();
 	document.getElementById("displayInput").value = currentNick;
 	if (currentImg != "") {
 		myData = peerMap.get(me);
 		if (myData == undefined || myData.imgURL == "" || myData.imgURL == undefined) {
-			myData = await updatePeer(me, currentNick, currentImg, "");
+			myData = await updatePeer(me, "");
 		}
 		document.getElementById('userIconPreview').src = myData.imgURL;
 	} else {
@@ -413,6 +421,7 @@ async function saveUserInfo() {
 		}
 	}
 
+	publishProfile();
 	updatePersonalNickDisplay();
 	$('#userUpdateMenu').modal('hide');
 }
@@ -705,6 +714,8 @@ async function addMsg(msg, monologue, outputLive) {
 	if (msg.id == undefined) {
 		msg.id = "";
 	}
+	msg.nick = getPeerNick(msg.id);
+
 	let peerMd5 = md51(msg.id);
 	let peerIdentifier = btoa(String.fromCharCode.apply(null, Int32ArrayToUInt8Array(peerMd5)));
 	if (typeof(msg.inlineImg) == "string" && typeof(msg.inlineVid) == "string" && msg.inlineImg != "" && msg.inlineVid != "") {
@@ -808,10 +819,11 @@ function processMsg(msg, backlog) {
 // out is used for processing recieved messages and outputting them both to console and the message box.
 async function out(msg) {
 	let msgObj = processMsg(msg);
-	if (msgObj == null || isEmpty(msgObj.nick) || (isEmpty(msgObj.msg) && isEmpty(msgObj.inlineImg) && isEmpty(msgObj.inlineVid))) {
+	if (msgObj == null || (isEmpty(msgObj.msg) && isEmpty(msgObj.inlineImg) && isEmpty(msgObj.inlineVid))) {
 		return;
 	}
-	let peer = await updatePeer(msgObj.id, msgObj.nick, msgObj.img, msg.topic);
+	// NOTE: This used to be "let peer = await [...]"
+	updatePeer(msgObj.id, msg.topic);
 
 	if (msgObj.id != me && typeof(msgObj.msg) == "string" && msgObj.msg.toLowerCase().includes(currentNick.toLowerCase())) {
 		document.getElementById("notificationSound").play();
@@ -865,7 +877,7 @@ async function sendMsg() {
 		return true;
 	}
 	textPosition = 0;
-	sendmsg({"nick":currentNick, "msg":msg, "img":currentImg, "timestamp":Math.floor(new Date().getTime()/10)}, currentRoom);
+	sendmsg({"msg":msg, "timestamp":Math.floor(new Date().getTime()/10)}, currentRoom);
 	chatInput.value = "";
 	chatInput.rows = 1;
 	toggleEmojiPicker(false);
@@ -996,7 +1008,7 @@ async function changeChan(to, first) {
 	roomMap.set(prefix+to, room);
 	c.scrollTop = c.scrollHeight;
 	setTimeout(function(){c.scrollTop = c.scrollHeight;}, 250);
-	room.set(me, await updatePeer(me, currentNick, currentImg, ""));
+	room.set(me, await updatePeer(me, ""));
 	updateRoomList();
 	updateUserList();
 	document.getElementById("chatInput").focus();
@@ -1059,14 +1071,46 @@ function getRoom(topic) {
 	return roomMap.get(topic);
 }
 
+// fetchPeerInfo will try to resolve a PeerID over IPNS to get their profile information, returning it as an object
+async function fetchPeerInfo(id) {
+	let peer = undefined;
+	for await (const name of ipfs.name.resolve(id, {timeout: 5000})) {
+		peer = name;
+	}
+	if (peer == undefined) {
+		return;
+	}
+	const content = [];
+	for await (const chunk of ipfs.cat(peer, {timeout: 5000, length: 1024})) {
+		content.push(chunk);
+	}
+	if (content.length == 0) {
+		return;
+	}
+	try {
+		peer = JSON.parse(new TextDecoder().decode(content[0]));
+	} catch {
+		return;
+	}
+	return peer;
+}
+
 // updatePeer is the function that helps keep certain peer data like nick and img updated. If nick or img are empty,
 // they are unchanged. topics can be used to also update certain rooms with data, which will be reflected in only those
 // rooms (and in peerMap).
-async function updatePeer(id, nick, img, topic) {
+async function updatePeer(id, topic) {
+	let peer = await fetchPeerInfo(id);
+	let nick = "Anonymous";
+	let img = "";
+	if (peer != undefined && !isEmpty(peer.nick) && !isEmpty(peer.img)) {
+		nick = peer.nick;
+		img = peer.img;
+	}
 	if (nick.length > maxNickLength) {
 		nick = nick.slice(0, maxNickLength)
 	}
-	var peer = {};
+
+	peer = {};
 	trusted = trustedPeerMap.has(id);
 	inMap = peerMap.has(id);
 
@@ -1150,7 +1194,7 @@ async function processPulse(msg) {
 		return;
 	}
 	lastPeer = new Date().getTime();
-	await updatePeer(msgObj.id, "", "", "");
+	updatePeer(msgObj.id, "");
 	// ignore our own pulses, purge inactive users
 	if (msgObj.id == me) {
 		purgeInactiveUsers();
@@ -1221,6 +1265,11 @@ function lines2rows(ev) {
 	msgBox.rows = countLines(msgBox);
 }
 
+async function publishProfile() {
+	let cid = await ipfs.add(JSON.stringify({nick: currentNick, img: currentImg}));
+	await ipfs.name.publish(cid.cid);
+}
+
 // set this to body's onload function
 async function onload() {
 	storedMap = await loadLocalItem("trustedPeerMap");
@@ -1236,6 +1285,8 @@ async function onload() {
 	if (storedNick != null) {
 		console.log(storedNick);
 		currentNick = storedNick;
+	} else {
+		publishProfile();
 	}
 	
 	storedImg =  await loadLocalItem('currentImg');
