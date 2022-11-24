@@ -10,7 +10,6 @@ const maxMsgsToSend = 300; // max number of messages to send in one burst upon a
 
 var lastAlive = 0;	// last keep-alive we saw from a relay
 var lastPeer = 0; 	// last keep-alive we saw from another peer
-var ipfs;
 var me; // our peerID
 var peerMap = new Map(); // track total peer count
 var trustedPeerMap = new Map(); // track trusted peers
@@ -1249,7 +1248,7 @@ async function onload() {
 	let _maxMsgsToLoad = await localforage.getItem("maxMsgsToLoad");
 	if (_maxMsgsToLoad != null) { maxMsgsToLoad = _maxMsgsToLoad; }
 
-	ipfs = await IpfsHttpClient.create({url: "http://127.0.0.1:5001", timeout: '5m'});
+	await INIT_IPFS();
 
 	// get our peerid
 	try {	
