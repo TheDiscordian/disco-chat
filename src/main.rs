@@ -51,19 +51,6 @@ async fn main() {
 		init = init.args(["init", "--repo-dir", REPO_PATH]);
 		init.output().unwrap();
 
-		// Allow tauri://localhost to control our daemon
-		// ipfs config --json --repo-dir REPO_PATH API.HTTPHeaders.Access-Control-Allow-Origin ["tauri://localhost"]
-		init = Command::new_sidecar("kubo").unwrap();
-		init = init.args([
-			"config",
-			"--json",
-			"--repo-dir",
-			REPO_PATH,
-			"API.HTTPHeaders.Access-Control-Allow-Origin",
-			"[\"tauri://localhost\"]",
-		]);
-		init.output().unwrap();
-
 		// Enable IPNS Pubsub (https://github.com/ipfs/kubo/blob/master/docs/experimental-features.md#ipns-pubsub)
 		// ipfs config --json --repo-dir REPO_PATH Ipns.UsePubsub true
 		init = Command::new_sidecar("kubo").unwrap();
@@ -119,6 +106,19 @@ async fn main() {
 				+ swarm_port_str + "/quic\", \"/ip6/::/udp/"
 				+ swarm_port_str + "/quic\"]"),
 		]);
+	daemon.output().unwrap();
+
+	// Allow tauri://localhost to control our daemon
+	// ipfs config --json --repo-dir REPO_PATH API.HTTPHeaders.Access-Control-Allow-Origin ["tauri://localhost"]
+	daemon = Command::new_sidecar("kubo").unwrap();
+	daemon = daemon.args([
+		"config",
+		"--json",
+		"--repo-dir",
+		REPO_PATH,
+		"API.HTTPHeaders.Access-Control-Allow-Origin",
+		"[\"tauri://localhost\",\"http://127.0.0.1:1430\"]",
+	]);
 	daemon.output().unwrap();
 
 	// Run the daemon
