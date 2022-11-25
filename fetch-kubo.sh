@@ -1,6 +1,11 @@
 #!/bin/sh
 
-ARCH=$(arch)
+if command -v arch &> /dev/null
+then
+	ARCH=$(arch)
+else
+	ARCH=$(uname -m)
+fi
 
 if [ $ARCH = 'x86_64' ]
 then
