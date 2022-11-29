@@ -1,0 +1,234 @@
+html {
+	height: 100%;
+	margin: 0;
+	overflow: hidden;
+}
+@font-face {
+	font-family:fira-code;
+	src: url(FiraCode.ttf);
+}
+@font-face {
+	font-family:inter;
+	src: url(Inter.ttf);
+}
+body {
+	height: 100%;
+	margin: 0;
+	overflow: hidden;
+	display: flex;
+	flex-flow: column;
+	background-color:#121212;
+	color:#eeeeee;
+	font-family:inter;
+}
+
+.version-display {
+	color:#aaa;
+	position:fixed;
+	right:0.2em;
+}
+
+.personalNickDisplay {
+	position:relative;
+	top:0.25em;
+	margin-left:0.5em;
+}
+.personalNickDisplay:hover {
+	cursor:pointer;
+}
+
+/* when you click an image */
+.bigImage {
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	max-width:95vw;
+	max-height:95vh;
+	position:fixed;
+}
+
+.floating-video {
+	position:fixed;
+	background-color:#171717;
+	max-width:30vw;
+	max-height:40vh;
+	min-width:12.5vw;
+	min-height:5vh;
+	bottom:3em;
+	right:0.5em;
+}
+
+/* chat */
+.chatMsg {
+	margin:0;
+	padding-left:0.5em;
+	padding-right:0.5em;
+	padding-top:0.1em;
+	padding-bottom:0.1em;
+	border-radius:1%;
+}
+.chatMsg:hover {
+	background-color:#272727;
+}
+.chatMsg p {
+	margin: 0;
+	padding:0;
+}
+.notified {
+	color:#7fffff;
+}
+.timestamp {
+	float:right;
+	color:#aaa;
+	-moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;-o-user-select:none;
+}
+.inlineImg:hover {
+	cursor:pointer;
+}
+blockquote {
+	background-color:#333;
+	padding-left:1em;
+	margin-right:-0.25em;
+}
+pre code {
+	color:#ddd;
+	background-color:#070707;
+	display:inline-block;
+	padding-left:0.5em;
+	padding-right:0.5em;
+	padding-top:0.25em;
+	padding-bottom:0.25em;
+	border-radius:3%;
+	overflow-y:auto;
+	min-width:33em;
+	margin-top:0.25em;
+	margin-bottom:0.25em;
+}
+pre {
+	margin:0;
+}
+code {
+	padding-left:2px;
+	padding-right:2px;
+	background-color:#070707;
+	font-feature-settings: "calt" 1;
+	text-rendering: optimizeLegibility;
+	font-family:fira-code;
+}
+.chatMsg img {
+	max-width:33vw;
+	max-height:40vh;
+	padding-top:0.25em;
+	padding-bottom:0.2em;
+}
+.chatMsg video {
+	max-width:33vw;
+	max-height:40vh;
+	padding-top:0.25em;
+	padding-bottom:0.2em;
+}
+.videoMsg {
+	color: #77f;
+	text-decoration:underline;
+}
+.videoMsg:hover {
+	cursor:pointer;
+}
+.chatMsg a {
+	color:#6f6fee;
+}
+.chatMsg .bigMsg {
+	font-size: 3.5em;
+	margin-top: 0;
+	margin-bottom: -0.02em;
+}
+.msgPfp {
+	width:3em;
+	height:3em;
+	border-radius:50%;
+	margin-right:1em;
+	margin-left:0;
+	margin-top:0.33em;
+	margin-bottom:0.1em;
+}
+
+.userInfoBox {
+	position: fixed;
+	border-radius: 25px;
+	width: 25em;
+	height:10em;
+	background-color:#112233;
+	z-index:10;
+}
+.trustDisplay {
+	font-weight:bold;
+}
+.userInfoBoxButtons {
+	position: absolute;
+	bottom: 0em;
+	margin: 0.75em;
+}
+.userIcon {
+	width:6em;
+	height:6em;
+	float:right;
+	margin-right:1.5em;
+	bottom: 1em;
+	position: absolute;
+	right:0;
+}
+
+.optionsMenu {
+	position:absolute;
+	bottom:2.25em;
+}
+
+.container-fluid {
+	flex: 1 1 auto;
+	display: flex;
+	flex-flow: column;
+	padding: 0;
+	margin: 0;
+}
+.input-field {
+	height:2.1em;
+	margin-top:auto;
+	padding-left:0.1em;
+	padding-right:0.1em;
+}
+
+.userList li {
+	background-color:#0e0e0e;
+	padding-top:0.25em;
+	padding-bottom:0.25em;
+}
+.userList li:hover {
+	cursor:pointer;
+	background-color:#171717;
+}
+.userListAvatar {
+	width:2.5em;
+	height:2.5em;
+	margin-left:-0.75em;
+	margin-right:0.5em;
+	margin-top:0;
+	margin-bottom:0;
+	border-radius:50%;
+}
+.roomList li {
+	background-color:#272727;
+}
+.roomList li:hover {
+	cursor:pointer;
+}
+a {
+	color:#ddd;
+}
+a:hover {
+	color:#fff;
+	text-decoration:none;
+}
+
+.modal {
+	color:black;
+}
