@@ -575,7 +575,7 @@ async function showUserInfoBox(event, id) {
 }
 
 function Int32ArrayToUInt8Array(a) {
-	_out = new Uint8Array(16);
+	let _out = new Uint8Array(16);
 	for (i = 0;i < 4;i++) {
 		_out[i*4] = a[i] >> 24;
 		_out[i*4+1] = a[i] >> 16 & 0xff;
