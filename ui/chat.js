@@ -413,6 +413,11 @@ async function saveSettings() {
 
 /* room join menu */
 async function showJoinRoomMenu() {
+	if (roomMap.size >= 2) {
+		showError("Joining more than 2 rooms is not currently supported, sorry.<br><br>For more information see <a href='https://github.com/TheDiscordian/native-ipfs-building-blox/issues/3' target='_blank'>TheDiscordian/native-ipfs-building-blox#3</a>.")
+		return;
+	}
+	document.getElementById("roomInput").value = "";
 	$('#roomJoinMenu').modal();
 }
 
@@ -994,6 +999,8 @@ async function changeChan(to, first) {
 		lastRoom = "";
 		return;
 	}
+	let roomJoinBtn = document.getElementById("roomJoinModalBtn");
+	roomJoinBtn.disabled = true;
 	scrolling = true;
 	freeAllLooseMedia();
 	if (!roomMap.has(prefix+to)) {
@@ -1043,6 +1050,7 @@ async function changeChan(to, first) {
 	updateUserList();
 	document.getElementById("chatInput").focus();
 	$('#roomJoinMenu').modal('hide');
+	roomJoinBtn.disabled = false;
 
 	if (mobile && first != true) {
 		toggleRoomList();
