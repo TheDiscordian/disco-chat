@@ -1,4 +1,4 @@
-const version = "v0.0.0-dev29WIP11";
+const version = "v0.0.0";
 const messageSizeLimit = 20480; // limit for length of message
 const userIconFileSizeLimit = 2097152; // limit for user icons
 const inlineImageFileSizeLimit = 10485760; // limit for inline images
