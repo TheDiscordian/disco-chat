@@ -12,6 +12,7 @@ var lastAlive = 0;	// last keep-alive we saw from a relay
 var lastPeer = 0; 	// last keep-alive we saw from another peer
 var me; // our peerID
 var peerMap = new Map(); // track total peer count
+var userMap = new Map(); // track users / data
 var trustedPeerMap = new Map(); // track trusted peers
 var roomMap = new Map(); // track peer stats per room
 var currentRoom = "global";
@@ -342,18 +343,39 @@ function getAvatarURL(imgURL) {
 	return "./AvatarDefault.png";
 }
 
-function getPeerAvatarURL(peer) {
+async function fetchUser(id) {
+	if (id == undefined) {
+		return undefined;
+	}
+	let p = userMap.get(id);
+	if (p == undefined) {
+		p = await fetchPeerInfo(id);
+		if (p != undefined) {
+			p.imgURL = await loadImgURL(p.img);
+			userMap.set(id, p);
+		}
+	}
+	return p;
+}
+
+async function getPeerAvatarURL(peer) {
 	let p = peerMap.get(peer);
 	if (p == undefined) {
-		return getAvatarURL("");
+		p = await fetchUser(peer);
+		if (p == undefined) {
+			return getAvatarURL("");
+		}
 	}
 	return getAvatarURL(p.imgURL);
 }
 
-function getPeerNick(peer) {
+async function getPeerNick(peer) {
 	let p = peerMap.get(peer);
 	if (p == undefined) {
-		return "Anonymous";
+		p = await fetchUser(peer);
+		if (p == undefined) {
+			return "Anonymous";
+		}
 	}
 	return p.nick;
 }
@@ -502,8 +524,11 @@ async function untrustPeer(event, id) {
 }
 
 async function showUserInfoBox(event, id) {
-	room = getRoom(prefix+currentRoom);
-	user = room.get(id);
+	let room = getRoom(prefix+currentRoom);
+	let user = room.get(id);
+	if (user == undefined) {
+		user = await fetchUser(id);
+	}
 	trustBtn = document.getElementById("userInfoBoxTrustBtn");
 	trusted = false;
 	if (id == me) {
@@ -535,7 +560,7 @@ async function showUserInfoBox(event, id) {
 	userInfoBoxObj.style.top = event.clientY.toString()+"px";
 	userInfoBoxObj.style.left = Math.min(event.clientX, window.innerWidth-userInfoBoxObj.clientWidth).toString()+"px";
 	if (!isEmpty(user.img)) {
-		document.getElementById("userIcon").src = getPeerAvatarURL(id);
+		document.getElementById("userIcon").src = await getPeerAvatarURL(id);
 	} else {
 		document.getElementById("userIcon").src = "./AvatarDefault.png";
 	}
@@ -622,8 +647,9 @@ async function updateUserList() {
 			continue
 		}
 		if (peer.nick != undefined && peer.nick != "") {
+			let avatar = await getPeerAvatarURL(id);
 			ul.innerHTML += "<li class='list-group-item' onclick='showUserInfoBox(event, \""+id+
-				"\");'><img class='userListAvatar' src='"+getPeerAvatarURL(id)+"'/>"+
+				"\");'><img class='userListAvatar' src='"+avatar+"'/>"+
 				getNickHTML(id, peer.nick, false, 50)+"</li>";
 		}
 	}
@@ -714,7 +740,7 @@ async function addMsg(msg, monologue, outputLive) {
 	if (msg.id == undefined) {
 		msg.id = "";
 	}
-	msg.nick = getPeerNick(msg.id);
+	msg.nick = await getPeerNick(msg.id);
 
 	let peerMd5 = md51(msg.id);
 	let peerIdentifier = btoa(String.fromCharCode.apply(null, Int32ArrayToUInt8Array(peerMd5)));
@@ -729,9 +755,11 @@ async function addMsg(msg, monologue, outputLive) {
 		innerHTML = c.innerHTML;
 	}
 
+	let peerAvatarURL = await getPeerAvatarURL(msg.id);
+
 	if (!monologue) {
 		innerHTML += "<a href='#' onclick='showUserInfoBox(event, \""+msg.id+"\");'><img src='"+
-			getPeerAvatarURL(msg.id)+"' class='msgPfp'/>"+getNickHTML(msg.id, msg.nick, false, 115)+"</a>";
+			peerAvatarURL+"' class='msgPfp'/>"+getNickHTML(msg.id, msg.nick, false, 115)+"</a>";
 	}
 	if (msg.timestamp == undefined) {
 		msg.timestamp = new Date();
