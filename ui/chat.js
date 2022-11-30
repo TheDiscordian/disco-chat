@@ -1114,8 +1114,12 @@ async function fetchPeerInfo(id, timeout) {
 		return;
 	}
 	const content = [];
-	for await (const chunk of ipfs.cat(peer, {timeout: timeout, length: 1024})) {
-		content.push(chunk);
+	try {
+		for await (const chunk of ipfs.cat(peer, {timeout: timeout, length: 1024})) {
+			content.push(chunk);
+		}
+	} catch {
+		return;
 	}
 	if (content.length == 0) {
 		return;
@@ -1313,19 +1317,6 @@ async function onload() {
 		}
 		trustedPeerMap = storedMap;
 	}
-
-	storedNick = await loadLocalItem('nick');
-	if (storedNick != null) {
-		console.log(storedNick);
-		currentNick = storedNick;
-	} else {
-		publishProfile();
-	}
-	
-	storedImg =  await loadLocalItem('currentImg');
-	if (storedImg != null) {
-		currentImg =  storedImg;
-	}
 	
 	let _maxMsgsToStore = await localforage.getItem("maxMsgsToStore");
 	if (_maxMsgsToStore != null) { maxMsgsToStore = _maxMsgsToStore; }
@@ -1343,6 +1334,24 @@ async function onload() {
 	}
 	me = me.id.toString();	
 
+	storedNick = await loadLocalItem('nick');
+	if (storedNick != null) {
+		console.log(storedNick);
+		currentNick = storedNick;
+	} else {
+		await publishProfile();
+	}
+
+	storedImg =  await loadLocalItem('currentImg');
+	if (storedImg != null) {
+		currentImg =  storedImg;
+	}
+
+	let myProfile = await fetchPeerInfo(me);
+	if (myProfile == undefined) {
+		await publishProfile();
+	}
+
 	document.getElementById("personalNickDisplay").onclick = function(event){showUserInfoBox(event, me)};
 
 	// join a global channel, because we don't have real chat channels implemented yet
@@ -1357,6 +1366,7 @@ async function onload() {
 			getRoom(prefix+storedRooms[i]);
 		}
 	}
+
 	await changeChan(currentRoom, true);
 	await updateRoomList();
 	document.getElementById("roomJoinBtn").disabled = false;
