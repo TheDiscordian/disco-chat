@@ -352,8 +352,10 @@ async function fetchUser(id) {
 		p = await fetchPeerInfo(id);
 		if (p != undefined) {
 			p.imgURL = await loadImgURL(p.img);
-			userMap.set(id, p);
+		} else {
+			p = {id:id,nick:"Anonymous",imgURL:getAvatarURL(""),img:""};
 		}
+		userMap.set(id, p);
 	}
 	return p;
 }
