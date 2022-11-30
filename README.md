@@ -3,6 +3,7 @@ This repo is a WIP. DiscoChat works fine but isn't ready for production.
 ## Requirements
 
 - [Rust](https://www.rust-lang.org/)
+- [Python3](https://python.org)
 
 ## Setup
 
@@ -10,6 +11,13 @@ This repo is a WIP. DiscoChat works fine but isn't ready for production.
 
 ```sh
 cargo install tauri-cli
+```
+
+### Install libraries
+
+```sh
+npm install
+npm run build
 ```
 
 ### Fetch Kubo

@@ -1,0 +1,24 @@
+{
+  "name": "disco-chat",
+  "version": "0.0.0",
+  "description": "A peer-to-peer messaging app.",
+  "main": "index.js",
+  "scripts": {
+    "build": "python3 tools/copyImports.py"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheDiscordian/disco-chat.git"
+  },
+  "author": "TheDiscordian",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TheDiscordian/disco-chat/issues"
+  },
+  "homepage": "https://github.com/TheDiscordian/disco-chat#readme",
+  "dependencies": {
+    "ipfs-http-client": "^59.0.0",
+    "jquery": "^3.6.0",
+    "localforage": "^1.10.0"
+  }
+}

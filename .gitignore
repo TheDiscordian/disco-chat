@@ -4,3 +4,4 @@
 /bin/
 /.discochat
 .DS_Store
+node_modules
