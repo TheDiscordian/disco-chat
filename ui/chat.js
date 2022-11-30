@@ -349,7 +349,7 @@ async function fetchUser(id) {
 	}
 	let p = userMap.get(id);
 	if (p == undefined) {
-		p = await fetchPeerInfo(id);
+		p = await fetchPeerInfo(id, 2500);
 		if (p != undefined) {
 			p.imgURL = await loadImgURL(p.img);
 		} else {
@@ -1102,16 +1102,19 @@ function getRoom(topic) {
 }
 
 // fetchPeerInfo will try to resolve a PeerID over IPNS to get their profile information, returning it as an object
-async function fetchPeerInfo(id) {
+async function fetchPeerInfo(id, timeout) {
+	if (timeout == undefined) {
+		timeout = 5000;
+	}
 	let peer = undefined;
-	for await (const name of ipfs.name.resolve(id, {timeout: 5000})) {
+	for await (const name of ipfs.name.resolve(id, {timeout: timeout})) {
 		peer = name;
 	}
 	if (peer == undefined) {
 		return;
 	}
 	const content = [];
-	for await (const chunk of ipfs.cat(peer, {timeout: 5000, length: 1024})) {
+	for await (const chunk of ipfs.cat(peer, {timeout: timeout, length: 1024})) {
 		content.push(chunk);
 	}
 	if (content.length == 0) {
