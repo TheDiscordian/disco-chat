@@ -1310,7 +1310,7 @@ async function onload() {
 
 	document.getElementById("personalNickDisplay").onclick = function(event){showUserInfoBox(event, me)};
 
-	// join a global channel, because we don't have real chat channels implemented yet
+	// join the rooms we were in on last run
 	storedRooms = await loadLocalItem('rooms');
 	if (storedRooms == null || storedRooms == "") {
 		await joinchan(currentRoom);
