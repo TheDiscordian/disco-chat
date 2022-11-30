@@ -5,11 +5,11 @@ html {
 }
 @font-face {
 	font-family:fira-code;
-	src: url(FiraCode.ttf);
+	src: url(fonts/FiraCode.ttf);
 }
 @font-face {
 	font-family:inter;
-	src: url(Inter.ttf);
+	src: url(fonts/Inter.ttf);
 }
 body {
 	height: 100%;

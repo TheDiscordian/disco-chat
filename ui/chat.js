@@ -7,6 +7,7 @@ const maxNickLength = 100; // limit for user nicks (truncated if over) TODO move
 const prefix = "discochat+"; // unique identifier for protocol. Called prefix because it's *usually* at the beginning, not because it's required to be. Changing this just makes it really easy to roll your own protocol.
 const messageExpiry = 300; // time in seconds to consider message valid
 const maxMsgsToSend = 300; // max number of messages to send in one burst upon a request for backlog
+const defaultAvatar = "./media/AvatarDefault.png";
 
 var lastAlive = 0;	// last keep-alive we saw from a relay
 var lastPeer = 0; 	// last keep-alive we saw from another peer
@@ -340,7 +341,7 @@ function getAvatarURL(imgURL) {
 	if (imgURL != undefined && imgURL != "") {
 		return imgURL;
 	}
-	return "./AvatarDefault.png";
+	return defaultAvatar;
 }
 
 async function fetchUser(id) {
@@ -392,7 +393,7 @@ async function showUserUpdateMenu() {
 		}
 		document.getElementById('userIconPreview').src = myData.imgURL;
 	} else {
-		document.getElementById('userIconPreview').src = "./AvatarDefault.png";
+		document.getElementById('userIconPreview').src = defaultAvatar;
 	}
 }
 
@@ -569,7 +570,7 @@ async function showUserInfoBox(event, id) {
 	if (!isEmpty(user.img)) {
 		document.getElementById("userIcon").src = await getPeerAvatarURL(id);
 	} else {
-		document.getElementById("userIcon").src = "./AvatarDefault.png";
+		document.getElementById("userIcon").src = defaultAvatar;
 	}
 }
 
@@ -788,7 +789,7 @@ async function addMsg(msg, monologue, outputLive) {
 		}
 		innerHTML += cleanString(msg.msg, true);
 	} else if (msg.inlineImg != "" && msg.inlineImg != undefined) {
-		innerHTML += "<img onload='injectImage(event, \""+msg.inlineImg+"\", \""+msg.mime+"\");' onclick='showBigImage(\""+msg.inlineImg+"\", \""+msg.mime+"\");' class='inlineImg' src='./loading.gif' />"
+		innerHTML += "<img onload='injectImage(event, \""+msg.inlineImg+"\", \""+msg.mime+"\");' onclick='showBigImage(\""+msg.inlineImg+"\", \""+msg.mime+"\");' class='inlineImg' src='./media/loading.gif' />"
 	} else if (msg.inlineVid != "" && msg.inlineVid != undefined) {
 		innerHTML += "<span onclick='showFloatingVideo(\""+msg.inlineVid+"\", \""+msg.mime+"\");' class='videoMsg'>Click here to play a video ("+(await getVidSize(msg.inlineVid)/1024**2).toFixed(2)+"MiB).</span>"
 	}
@@ -1192,7 +1193,7 @@ async function updatePeer(id, topic) {
 				try {
 					peer.imgURL = await loadImgURL(img);
 				} catch {
-					peer.imgURL = "./AvatarDefault.png";
+					peer.imgURL = defaultAvatar;
 				}
 			}
 		}
@@ -1206,10 +1207,10 @@ async function updatePeer(id, topic) {
 			try {
 				peer.imgURL = await loadImgURL(img);
 			} catch {
-				peer.imgURL = "./AvatarDefault.png";
+				peer.imgURL = defaultAvatar;
 			}
 		} else {
-			peer.imgURL = "./AvatarDefault.png";
+			peer.imgURL = defaultAvatar;
 		}
 		console.log(id);
 	}
