@@ -1249,58 +1249,6 @@ async function processPulse(msg) {
 	lastAlive = new Date().getTime();
 }
 
-// processes a circuit-relay announce over pubsub
-async function processAnnounce(addr) {
-	// process the recieved addres
-	addrFrom = addr.from;
-	addr2 = new TextDecoder().decode(addr.data);
-	
-	if (addr2[0] != "{") {
-		console.log(addr2);
-		return;
-	}
-
-	addrObj = processMsg(addr);
-	if (addrObj == null) {
-		console.log("addrObj null")
-		return;
-	}
-
-	// keep-alives are also sent over here, so let's update that global first
-	lastAlive = new Date().getTime();
-
-	if (isEmpty(addrObj.addr)) {
-		console.log("keep-alive");
-		return;
-	} 
-	peer = addrObj.addr.split("/")[9];
-	console.log("Peer: " + peer);
-	console.log("Me: " + me);
-	console.log("From: " + addrFrom);
-	if (peer == me) {
-		return;
-	}
-
-	// get a list of peers
-	peers = await ipfs.swarm.peers();
-	for (i in peers) {
-		// if we're already connected to the peer, don't bother doing a circuit connection
-		if (peers[i].peer == peer) {
-			return;
-		}
-	}
-	// log the address to console as we're about to attempt a connection
-	console.log(addrObj.addr);
-
-	// connection almost always fails the first time, but almost always succeeds the second time, so we do this:
-	try {
-		await ipfs.swarm.connect(addrObj.addr, {timeout:30000});
-	} catch(err) {
-		console.log(err);
-		await ipfs.swarm.connect(addrObj.addr, {timeout:300000});
-	}
-}
-
 function lines2rows(ev) {
 	if (ev == undefined) {
 		return
@@ -1381,15 +1329,8 @@ async function onload() {
 
 	updatePersonalNickDisplay();
 
-	// publish and subscribe to keepalive to help keep the sockets open
-	// TODO see if we need this
-	//await ipfs.pubsub.subscribe(prefix+"keepalive");
-	//setInterval(function(){sendmsg("1", prefix+"keepalive");}, 4000);
 	setInterval(checkalive, 1000);
-	// process announcements over the relay network, and publish our own keep-alives to keep the channel alive
-	// TODO support this to help clients connect through relay
-	// await ipfs.pubsub.subscribe("announce-circuit", processAnnounce);
-	// personal keep-alives moved to generic circuit because otherwise the announce-circuit gets overloaded with things that aren't announcements ... though this may cause the announce circuit to disconnect, needs testing.
+	// personal keep-alives
 	let pulse = function(){ipfs.pubsub.publish(prefix+"pulse-circuit", JSON.stringify({"timestamp":Math.floor(new Date().getTime()/10)}));}
 	setInterval(pulse, 15000);
 	await ipfs.pubsub.subscribe(prefix+"pulse-circuit", processPulse);
