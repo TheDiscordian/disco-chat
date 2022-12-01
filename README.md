@@ -24,8 +24,6 @@ npm run build
 
 #### Linux / Mac
 
-This hasn't been tested much, but definitely works on Apple Silicon. Might not work on Linux, but shouldn't need too much tweaking...
-
 ```sh
 ./fetch-kubo.sh
 ```
