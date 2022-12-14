@@ -2,7 +2,13 @@
 	all(not(debug_assertions), target_os = "windows"),
 	windows_subsystem = "windows"
 )]
+extern crate base64;
+extern crate serde;
+extern crate serde_json;
+
 use rand::Rng;
+use std::collections::HashMap;
+use std::fs;
 use std::path::Path;
 use std::process::exit;
 use tauri::api::process::Command;
@@ -16,6 +22,8 @@ const REPO_PATH: &str = ".discochat";
 
 static mut API_PORT: u32 = 0;
 static mut SWARM_PORT: u32 = 0;
+static mut PRIV_KEY: String = String::new(); // These are both always assumed to be Ed25519
+static mut PUB_KEY: String = String::new();
 
 #[tauri::command]
 fn get_api_port() -> u32 {
@@ -25,6 +33,51 @@ fn get_api_port() -> u32 {
 #[tauri::command]
 fn get_swarm_port() -> u32 {
 	unsafe { return SWARM_PORT };
+}
+
+#[tauri::command]
+fn get_priv_key() -> &'static str {
+	unsafe { return &PRIV_KEY };
+}
+
+#[tauri::command]
+fn get_pub_key() -> &'static str {
+	unsafe { return &PUB_KEY };
+}
+
+fn config_kubo<I>(args: I)
+where
+	I: IntoIterator,
+	<I as IntoIterator>::Item: AsRef<str>,
+{
+	let mut init = Command::new_sidecar("kubo").unwrap();
+	init = init.args(["config", "--json", "--repo-dir", REPO_PATH]);
+	init = init.args(args);
+	init.output().unwrap();
+}
+
+fn set_keys() {
+	// Get our Public and Private keys
+	let config_file_contents =
+		fs::read_to_string(REPO_PATH.to_owned() + "/config").expect("Error reading file");
+	// Deserialize the JSON string into a HashMap.
+	let map: HashMap<String, serde_json::Value> =
+		serde_json::from_str(&config_file_contents).expect("Error parsing JSON");
+
+	// Get the value associated with the key "Identity.PrivKey" as a string.
+	let identity = map.get("Identity").expect("Key not found");
+
+	let priv_key_b64 = identity["PrivKey"].as_str().expect("Value is not a string");
+
+	let decoded = base64::decode(priv_key_b64).unwrap();
+
+	let (_, rest) = decoded.split_at(4);
+	let (private_key, public_key) = rest.split_at(32);
+
+	unsafe {
+		PRIV_KEY = base64::encode(private_key).to_owned();
+		PUB_KEY = base64::encode(public_key).to_owned();
+	}
 }
 
 #[tokio::main]
@@ -53,77 +106,46 @@ async fn main() {
 
 		// Enable IPNS Pubsub (https://github.com/ipfs/kubo/blob/master/docs/experimental-features.md#ipns-pubsub)
 		// ipfs config --json --repo-dir REPO_PATH Ipns.UsePubsub true
-		init = Command::new_sidecar("kubo").unwrap();
-		init = init.args([
-			"config",
-			"--json",
-			"--repo-dir",
-			REPO_PATH,
-			"Ipns.UsePubsub",
-			"true",
-		]);
-		init.output().unwrap();
+		config_kubo(["Ipns.UsePubsub", "true"]);
 
 		// Disable local gateway
 		// ipfs config --json --repo-dir REPO_PATH Addresses.Gateway null
-		init = Command::new_sidecar("kubo").unwrap();
-		init = init.args([
-			"config",
-			"--json",
-			"--repo-dir",
-			REPO_PATH,
-			"Addresses.Gateway",
-			"null",
-		]);
-		init.output().unwrap();
+		config_kubo(["Addresses.Gateway", "null"]);
 	}
 
 	// Configure the API port
-	let mut daemon = Command::new_sidecar("kubo").unwrap();
-	daemon = daemon.args([
-		"config",
-		"--json",
-		"--repo-dir",
-		REPO_PATH,
+	config_kubo([
 		"Addresses.API",
 		&("[\"/ip4/127.0.0.1/tcp/".to_owned() + &get_api_port().to_string() + "\"]"),
 	]);
-	daemon.output().unwrap();
 
 	// Configure the swarm port
 	let swarm_port_str = &get_swarm_port().to_string();
-	daemon = Command::new_sidecar("kubo").unwrap();
-	daemon =
-		daemon.args([
-			"config",
-			"--json",
-			"--repo-dir",
-			REPO_PATH,
-			"Addresses.Swarm",
-			&("[\"/ip4/0.0.0.0/tcp/".to_owned()
-				+ swarm_port_str + "\",\"/ip6/::/tcp/"
-				+ swarm_port_str + "\",\"/ip4/0.0.0.0/udp/"
-				+ swarm_port_str + "/quic\", \"/ip6/::/udp/"
-				+ swarm_port_str + "/quic\"]"),
-		]);
-	daemon.output().unwrap();
+	config_kubo([
+		"Addresses.Swarm",
+		&("[\"/ip4/0.0.0.0/tcp/".to_owned()
+			+ swarm_port_str
+			+ "\",\"/ip6/::/tcp/"
+			+ swarm_port_str
+			+ "\",\"/ip4/0.0.0.0/udp/"
+			+ swarm_port_str
+			+ "/quic\", \"/ip6/::/udp/"
+			+ swarm_port_str
+			+ "/quic\"]"),
+	]);
+
+	set_keys();
 
 	// Allow tauri://localhost to control our daemon
 	// ipfs config --json --repo-dir REPO_PATH API.HTTPHeaders.Access-Control-Allow-Origin ["tauri://localhost"]
-	daemon = Command::new_sidecar("kubo").unwrap();
-	daemon = daemon.args([
-		"config",
-		"--json",
-		"--repo-dir",
-		REPO_PATH,
+	config_kubo([
 		"API.HTTPHeaders.Access-Control-Allow-Origin",
 		"[\"tauri://localhost\",\"http://127.0.0.1:1430\"]",
 	]);
-	daemon.output().unwrap();
 
 	// Run the daemon
 	// ipfs daemon --repo-dir REPO_PATH --enable-gc --enable-pubsub-experiment
-	daemon = Command::new_sidecar("kubo").unwrap();
+	let mut daemon = Command::new_sidecar("kubo").unwrap();
 	daemon = daemon.args([
 		"daemon",
 		"--repo-dir",
@@ -151,7 +173,12 @@ async fn main() {
 
 	// Run Tauri application (this blocks until webview is closed)
 	tauri::Builder::default()
-		.invoke_handler(tauri::generate_handler![get_api_port, get_swarm_port])
+		.invoke_handler(tauri::generate_handler![
+			get_api_port,
+			get_swarm_port,
+			get_priv_key,
+			get_pub_key
+		])
 		.run(tauri::generate_context!())
 		.expect("error while running tauri application");
 
