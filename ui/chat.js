@@ -33,6 +33,9 @@ var updatingUserList = false; // used as a lock so userlist doesn't update multi
 var maxMsgsToStore = 2000; // max messages to store per room
 var maxMsgsToLoad = 100; // number of messages to load at once
 
+var _priv_key = null;
+var _pub_key = null;
+
 var msgIds = new Map();
 
 /* BACKLOG STUFF BEGIN */
@@ -1281,6 +1284,13 @@ async function onload() {
 	if (_maxMsgsToLoad != null) { maxMsgsToLoad = _maxMsgsToLoad; }
 
 	await INIT_IPFS();
+
+	// retrieve our keys
+	let priv = await get_private_key();
+	let pub = await get_public_key();
+	// convert our keys into something nobleEd25519 likes
+	_priv_key = Uint8Array.from(atob(priv), c => c.charCodeAt(0));
+	_pub_key = Uint8Array.from(atob(pub), c => c.charCodeAt(0));
 
 	// get our peerid
 	try {	
