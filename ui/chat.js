@@ -881,7 +881,7 @@ async function processMsg(msg, backlog) {
 		}
 		let secret = await nobleEd25519.getSharedSecret(_priv_key, other_pub);
 		let encryptedBytes = aesjs.utils.hex.toBytes(msgObj.msg);
-		let aesCtr = new aesjs.ModeOfOperation.ctr(secret);
+		let aesCtr = new aesjs.ModeOfOperation.ctr(secret, new aesjs.Counter(parseInt(msgObj.n)));
 		msgObj.msg = aesjs.utils.utf8.fromBytes(aesCtr.decrypt(encryptedBytes));
 	}
 	
@@ -956,9 +956,10 @@ async function sendMsg() {
 	} else {
 		let other_pub = bs58.decode(vs.value).subarray(6);
 		let secret = await nobleEd25519.getSharedSecret(_priv_key, other_pub);
-		let aesCtr = new aesjs.ModeOfOperation.ctr(secret);
+		let uniqueN = window.crypto.getRandomValues(new Uint16Array(1))[0];
+		let aesCtr = new aesjs.ModeOfOperation.ctr(secret, new aesjs.Counter(uniqueN));
 		let encryptedBytes = aesCtr.encrypt(aesjs.utils.utf8.toBytes(msg));
-		sendmsg({"msg":aesjs.utils.hex.fromBytes(encryptedBytes), "for":vs.value, "timestamp":Math.floor(new Date().getTime()/10)}, currentRoom);
+		sendmsg({"msg":aesjs.utils.hex.fromBytes(encryptedBytes), "for":vs.value, "n":uniqueN, "timestamp":Math.floor(new Date().getTime()/10)}, currentRoom);
 	}
 	chatInput.value = "";
 	chatInput.rows = 1;
