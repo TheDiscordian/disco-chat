@@ -6,6 +6,7 @@ extern crate base64;
 extern crate serde;
 extern crate serde_json;
 
+use libp2p::identity;
 use rand::Rng;
 use std::collections::HashMap;
 use std::fs;
@@ -70,9 +71,18 @@ fn set_keys() {
 	let priv_key_b64 = identity["PrivKey"].as_str().expect("Value is not a string");
 
 	let decoded = base64::decode(priv_key_b64).unwrap();
+	// TODO consider decoding this on the js side so we know what kind of key we're working with on the frontend.
+	let keypair = identity::Keypair::from_protobuf_encoding(&decoded).unwrap();
 
-	let (_, rest) = decoded.split_at(4);
-	let (private_key, public_key) = rest.split_at(32);
+	let keypair_bytes: [u8; 64];
+	#[allow(irrefutable_let_patterns)]
+	if let identity::Keypair::Ed25519(ed25519) = keypair {
+		keypair_bytes = ed25519.encode();
+	} else {
+		println!("DiscoChat only works with Ed25519 keys...");
+		exit(1);
+	}
+	let (private_key, public_key) = keypair_bytes.split_at(32);
 
 	unsafe {
 		PRIV_KEY = base64::encode(private_key).to_owned();

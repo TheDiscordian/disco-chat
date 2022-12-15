@@ -4,8 +4,17 @@ This repo is a WIP. DiscoChat works fine but isn't ready for production.
 
 - [Rust](https://www.rust-lang.org/)
 - [Python3](https://python.org)
+- [Protoc](https://grpc.io/docs/protoc-installation/)
+- [npm](https://nodejs.org/en/download/)
 
 ## Setup
+
+### Download the Source
+
+```sh
+git clone https://github.com/TheDiscordian/disco-chat.git
+cd disco-chat
+```
 
 ### Install Tauri
 
