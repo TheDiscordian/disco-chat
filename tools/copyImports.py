@@ -4,6 +4,7 @@ paths = [
 	"node_modules/%s/dist/index.min.js",
 	"node_modules/%s/dist/%s.min.js",
 	"node_modules/%s/lib/index.js",
+	"node_modules/%s/index.js",
 ]
 
 package = json.load(open("package.json"))

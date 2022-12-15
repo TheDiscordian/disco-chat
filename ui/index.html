@@ -8,6 +8,8 @@
 	<script src="./libs/jquery.min.js"></script>
 	<script src="./libs/bootstrap.bundle.min.js"></script>
 	<script src="./libs/noble-ed25519.js"></script>
+	<script src="./libs/aes-js.js"></script>
+	<script src="./libs/bs58.bundle.js"></script>
 	<script src="./libs/ipfs-http-client.min.js"></script>
 	<script src="./libs/showdown.min.js"></script>
 	<script src="./countLines.js"></script>
@@ -40,7 +42,9 @@
 	<p style="margin:0.75em;max-width:21em;display:inline-block;word-wrap:break-word;"><span id="userInfoBoxDisplayName"></span><br />
 	<span id="userInfoBoxTrusted" class="trustDisplay" style="color:#f00;"></span><br />
 	</p>
-	<p class="userInfoBoxButtons"><button type="button" class="btn btn-primary" id="userInfoBoxTrustBtn"></button></p>
+	<p class="userInfoBoxButtons">
+		<button type="button" class="btn btn-primary" id="userInfoBoxTrustBtn"></button>
+	</p>
 	<img class="userIcon" id="userIcon"/>
 </div>
 
@@ -262,15 +266,20 @@
 				<a href="#" class="list-group-item list-group-item-action" onclick="showSettingsMenu();">Settings</a>
 			</div>
 		</div>
-		<div class="col-lg-8 input-field">
+		<div class="col-lg-6 input-field">
 			<form action="#"><textarea oninput="lines2rows(event);" class="form-control" id="chatInput" rows="1" style="resize:none;overflow-x:hidden;position:absolute;bottom:-0.25em;left:0;max-height:95vh;" placeholder="Chat here" autofocus disabled></textarea></form>
+		</div>
+		<div class="col-sm-2 input-field">
+			<select class="form-control" id="visibility-selector">
+				<option>Everyone</option>
+			</select>
 		</div>
 		<div class="col-sm-2 input-field">
 			<emoji-picker style="z-index:11;bottom:2.25em;right:0;margin-right:0.25em;position:absolute;" hidden></emoji-picker>
 			<form><button type="button" class="col-sm-3 form-control btn btn-outline-primary" style="margin-left:0.25em;" onclick="toggleEmojiPicker();">😃</button>
 			<button type="button" class="col-sm-4 form-control btn btn-outline-primary" onclick="showShareImageMenu();">📷</button>
-			<button type="button" class="col-sm-4 form-control btn btn-outline-primary" onclick="showShareVideoMenu();">🎬</button>
-			<!--<button type="button" class="col-sm-3 form-control btn btn-outline-primary" onclick="toggleActionsMenu();">…</button></form>
+			<button type="button" class="col-sm-4 form-control btn btn-outline-primary" onclick="showShareVideoMenu();">🎬</button></form>
+			<!--<button type="button" class="col-sm-3 form-control btn btn-outline-primary" onclick="toggleActionsMenu();">…</button>
 			<div style="right:0;" class="list-group optionsMenu" id="actionsMenu" hidden>
 				<a href="#" class="list-group-item list-group-item-action" onclick="showJoinRoomMenu();">Join Room</a>
 			</div>-->

@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/TheDiscordian/disco-chat#readme",
   "dependencies": {
+    "aes-js": "^3.1.2",
     "ipfs-http-client": "^59.0.0",
     "jquery": "^3.6.0",
     "localforage": "^1.10.0"

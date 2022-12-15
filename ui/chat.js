@@ -72,7 +72,7 @@ async function processBacklogSignal(msg) {
 		return
 	}
 	let where = msg.topic.split("+").splice(1).join("+");
-	let json = processMsg(msg, true);
+	let json = await processMsg(msg, true);
 	if (json == null) {
 		return;
 	}
@@ -637,8 +637,16 @@ async function updateRoomList() {
 async function updateUserList() {
 	if (updatingUserList) return;
 	updatingUserList = true;
-	ul = document.getElementById("userList");
+	let ul = document.getElementById("userList");
+	let vs = document.getElementById("visibility-selector");
 	ul.innerHTML = "";
+	let curSelect = vs.value;
+	vs.innerHTML = "";
+
+	let option = document.createElement("option");
+	option.innerText = "Everyone";
+	vs.appendChild(option);
+
 	let localPeerMap = getRoom(prefix+currentRoom);
 
 	let connectedPeers = await ipfs.pubsub.peers(prefix+currentRoom);
@@ -662,8 +670,16 @@ async function updateUserList() {
 			ul.innerHTML += "<li class='list-group-item' onclick='showUserInfoBox(event, \""+id+
 				"\");'><img class='userListAvatar' src='"+avatar+"'/>"+
 				getNickHTML(id, peer.nick, false, 50)+"</li>";
+
+			if (id != me) {
+				option = document.createElement("option");
+				option.innerText = peer.nick;
+				option.value = id;
+				vs.appendChild(option);
+			}
 		}
 	}
+	vs.value = curSelect;
 	updatingUserList = false;
 }
 
@@ -813,7 +829,7 @@ function isEmpty(str) {
 }
 
 // processMsg takes a msg, and returns the json inside if it's valid (not repeated or expired). Returns null if invalid.
-function processMsg(msg, backlog) {	
+async function processMsg(msg, backlog) {
 	msg.id = msg.from.string;
 	if (msg.id == undefined) {
 		msg.id = msg.from.toString();
@@ -851,13 +867,30 @@ function processMsg(msg, backlog) {
 		console.log(msg);
 		return null;
 	}
+
+	// is this an encrypted message for us?
+	if (msgObj.for != undefined) {
+		if (msgObj.id != me && msgObj.for != me) {
+			return null;
+		}
+		let other_pub = null;
+		if (msgObj.id != me) {
+			other_pub = bs58.decode(msg.id).subarray(6);
+		} else {
+			other_pub = bs58.decode(msgObj.for).subarray(6);
+		}
+		let secret = await nobleEd25519.getSharedSecret(_priv_key, other_pub);
+		let encryptedBytes = aesjs.utils.hex.toBytes(msgObj.msg);
+		let aesCtr = new aesjs.ModeOfOperation.ctr(secret);
+		msgObj.msg = aesjs.utils.utf8.fromBytes(aesCtr.decrypt(encryptedBytes));
+	}
 	
 	return msgObj;
 }
 
 // out is used for processing recieved messages and outputting them both to console and the message box.
 async function out(msg) {
-	let msgObj = processMsg(msg);
+	let msgObj = await processMsg(msg);
 	if (msgObj == null || (isEmpty(msgObj.msg) && isEmpty(msgObj.inlineImg) && isEmpty(msgObj.inlineVid))) {
 		return;
 	}
@@ -916,7 +949,17 @@ async function sendMsg() {
 		return true;
 	}
 	textPosition = 0;
-	sendmsg({"msg":msg, "timestamp":Math.floor(new Date().getTime()/10)}, currentRoom);
+	let vs = document.getElementById("visibility-selector");
+
+	if (vs.value == "Everyone") {
+		sendmsg({"msg":msg, "timestamp":Math.floor(new Date().getTime()/10)}, currentRoom);
+	} else {
+		let other_pub = bs58.decode(vs.value).subarray(6);
+		let secret = await nobleEd25519.getSharedSecret(_priv_key, other_pub);
+		let aesCtr = new aesjs.ModeOfOperation.ctr(secret);
+		let encryptedBytes = aesCtr.encrypt(aesjs.utils.utf8.toBytes(msg));
+		sendmsg({"msg":aesjs.utils.hex.fromBytes(encryptedBytes), "for":vs.value, "timestamp":Math.floor(new Date().getTime()/10)}, currentRoom);
+	}
 	chatInput.value = "";
 	chatInput.rows = 1;
 	toggleEmojiPicker(false);
@@ -1238,7 +1281,7 @@ async function updatePeer(id, topic) {
 
 // processes peeralives over pubsub
 async function processPulse(msg) {
-	let msgObj = processMsg(msg);
+	let msgObj = await processMsg(msg);
 	if (msgObj == null) {
 		return;
 	}
