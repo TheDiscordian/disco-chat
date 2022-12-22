@@ -1,4 +1,4 @@
-Welcome to Disco Chat! A peer-to-peer chat application built using Tauri, JavaScript, and HTML.
+**Welcome to Disco Chat!** A peer-to-peer chat application built using Tauri, JavaScript, and HTML.
 
 Disco Chat is meant to be a fun, easy-to-use chat application, but it's also meant to help show developers how to build applications like it. It's based upon [native-ipfs-building-blox](https://github.com/TheDiscordian/native-ipfs-building-blox), which is a great kit for getting started on building desktop IPFS applications using HTML/Javascript (Rust too if you like!).
 
