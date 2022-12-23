@@ -26,26 +26,32 @@ static mut SWARM_PORT: u32 = 0;
 static mut PRIV_KEY: String = String::new(); // These are both always assumed to be Ed25519
 static mut PUB_KEY: String = String::new();
 
+// get_api_port returns the port that the API is listening on.
 #[tauri::command]
 fn get_api_port() -> u32 {
 	unsafe { return API_PORT };
 }
 
+// get_swarm_port returns the port that the swarm is listening on.
 #[tauri::command]
 fn get_swarm_port() -> u32 {
 	unsafe { return SWARM_PORT };
 }
 
+// get_priv_key returns the private key of the node.
 #[tauri::command]
 fn get_priv_key() -> &'static str {
 	unsafe { return &PRIV_KEY };
 }
 
+// get_pub_key returns the public key of the node.
 #[tauri::command]
 fn get_pub_key() -> &'static str {
 	unsafe { return &PUB_KEY };
 }
 
+// config_kubo is a function that configures the kubo node, `args` is a list of arguments.
+// Example usage: `config_kubo(["Ipns.UsePubsub", "true"])`
 fn config_kubo<I>(args: I)
 where
 	I: IntoIterator,
@@ -57,6 +63,7 @@ where
 	init.output().unwrap();
 }
 
+// set_keys gets the private and public keys of the node and sets them in the global variables.
 fn set_keys() {
 	// Get our Public and Private keys
 	let config_file_contents =
