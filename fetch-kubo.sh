@@ -1,11 +1,6 @@
 #!/bin/sh
 
-if command -v arch &> /dev/null
-then
-	ARCH=$(arch)
-else
-	ARCH=$(uname -m)
-fi
+ARCH=$(rustc -Vv | grep host | cut -f2 -d' ' | cut -f1 -d'-')
 
 if [ $ARCH = 'x86_64' ]
 then
