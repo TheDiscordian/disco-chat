@@ -223,7 +223,7 @@ code {
 	cursor:pointer;
 }
 a {
-	color:#ddd;
+	color:rgb(214, 211, 211);
 }
 a:hover {
 	color:#fff;
