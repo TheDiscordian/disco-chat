@@ -16,6 +16,12 @@ OS=$(rustc -Vv | grep host | cut -f3 -d'-')
 DOUBLE=$OS-$ARCH
 TRIPLE=$(rustc -Vv | grep host | cut -f2 -d' ')
 
+# DEBUG
+echo "OS:" $OS
+echo "DOUBLE:" $DOUBLE
+echo "TRIPLE:" $TRIPLE
+echo "ARCH:" $ARCH
+
 if [ -f "bin/kubo-$TRIPLE" ]
 then
 	exit
