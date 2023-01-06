@@ -26,8 +26,8 @@ jobs:
         run: |
           bash fetch-kubo.sh
           npm install && npm run build
-          ls
-          pwd
       - uses: tauri-apps/tauri-action@v0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          distPath: ./ui
