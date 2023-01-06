@@ -25,11 +25,19 @@ if [ ! $OS = 'windows' ]
 then
 	curl -Os "https://dist.ipfs.tech/kubo/$KUBO_LATEST/kubo_${KUBO_LATEST}_$DOUBLE.tar.gz"
 	tar -xf kubo_${KUBO_LATEST}_$DOUBLE.tar.gz
+	mv ./kubo/ipfs ./kubo-$TRIPLE
+	
+	rm -R kubo
+	rm kubo_${KUBO_LATEST}_$DOUBLE.tar.gz
 else
 	curl -Os "https://dist.ipfs.tech/kubo/$KUBO_LATEST/kubo_${KUBO_LATEST}_$DOUBLE.zip"
 	unzip kubo_${KUBO_LATEST}_$DOUBLE.zip
+	
+	mv ./kubo/ipfsexe ./kubo-$TRIPLE.exe
+	
+	rm -R kubo
+	rm kubo_${KUBO_LATEST}_$DOUBLE.zip
 fi
-mv ./kubo/ipfs ./kubo-$TRIPLE
 
-rm -R kubo
-rm kubo_${KUBO_LATEST}_$DOUBLE.tar.gz
+
+
