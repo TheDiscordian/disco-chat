@@ -1,11 +1,6 @@
 #!/bin/sh
 
-if command -v arch &> /dev/null
-then
-	ARCH=$(arch)
-else
-	ARCH=$(uname -m)
-fi
+ARCH=$(rustc -Vv | grep host | cut -f2 -d' ' | cut -f1 -d'-')
 
 if [ $ARCH = 'x86_64' ]
 then
@@ -26,9 +21,23 @@ KUBO_LATEST=v${KUBO_VERSIONS##*v}
 
 mkdir -p ./bin
 cd bin
-curl -Os "https://dist.ipfs.tech/kubo/$KUBO_LATEST/kubo_${KUBO_LATEST}_$DOUBLE.tar.gz"
-tar -xf kubo_${KUBO_LATEST}_$DOUBLE.tar.gz
-mv ./kubo/ipfs ./kubo-$TRIPLE
+if [ ! $OS = 'windows' ]
+then
+	curl -Os "https://dist.ipfs.tech/kubo/$KUBO_LATEST/kubo_${KUBO_LATEST}_$DOUBLE.tar.gz"
+	tar -xf kubo_${KUBO_LATEST}_$DOUBLE.tar.gz
+	mv ./kubo/ipfs ./kubo-$TRIPLE
+	
+	rm -R kubo
+	rm kubo_${KUBO_LATEST}_$DOUBLE.tar.gz
+else
+	curl -Os "https://dist.ipfs.tech/kubo/$KUBO_LATEST/kubo_${KUBO_LATEST}_$DOUBLE.zip"
+	unzip kubo_${KUBO_LATEST}_$DOUBLE".zip"
+	
+	mv ./kubo/ipfs.exe ./kubo-$TRIPLE.exe
+	
+	rm -R kubo
+	rm kubo_${KUBO_LATEST}_$DOUBLE.zip
+fi
 
-rm -R kubo
-rm kubo_${KUBO_LATEST}_$DOUBLE.tar.gz
+
+
