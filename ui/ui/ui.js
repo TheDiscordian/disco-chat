@@ -56,19 +56,21 @@ async function showJoinRoomMenu() {
 async function saveUserInfo() {
 	newNick = document.getElementById("displayInput").value;
 	if (newNick.replaceAll(" ", "") != "") {
-		currentNick = newNick
+		currentNick = newNick;
 	}
 	selectionObj = document.getElementById("userIconSelection");
 	if (selectionObj.value != "") {
 		if (selectionObj.files[0].size > userIconFileSizeLimit) {
 			console.log("Img too large");
 			showError("Image must be less than " + (userIconFileSizeLimit / 1024 ** 2).toFixed(2) + "MiB.");
+			return;
 		} else {
 			cid = await ipfs.add(selectionObj.files[0]);
 			currentImg = cid.path;
 			await localforage.setItem("currentImg", currentImg);
 		}
 	}
+	await localforage.setItem('nick', currentNick);
 
 	publishProfile();
 	updatePersonalNickDisplay();
