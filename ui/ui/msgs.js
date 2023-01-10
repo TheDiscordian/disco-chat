@@ -42,6 +42,7 @@ async function scrollMsgs(ev) {
 // truthy, it will update the live message area and scroll down the message window. Monologue should be true if the
 // last message was from the same person.
 async function addMsg(msg, monologue, outputLive) {
+
 	if (msg.id == undefined) {
 		msg.id = "";
 	}
@@ -78,7 +79,7 @@ async function addMsg(msg, monologue, outputLive) {
 	if (msg.notified) {
 		extraClass = " notified";
 	}
-	innerHTML += "<div class='chatMsg"+extraClass+"'><span class='timestamp' title='"+msg.timestamp.toString()+"'>"+timestamp+"</span>"
+	innerHTML += "<div class='chatMsg"+extraClass+"'><span class='timestamp' title='"+msg.timestamp.toString()+"'>"+timestamp+"</span>";
 
 	if (msg.msg != undefined && msg.msg != "") {
 		if (outputLive) {
@@ -86,9 +87,13 @@ async function addMsg(msg, monologue, outputLive) {
 		}
 		innerHTML += cleanString(msg.msg, true);
 	} else if (msg.inlineImg != "" && msg.inlineImg != undefined) {
-		innerHTML += "<img onload='injectImage(event, \""+msg.inlineImg+"\", \""+msg.mime+"\");' onclick='showBigImage(\""+msg.inlineImg+"\", \""+msg.mime+"\");' class='inlineImg' src='./media/loading.gif' />"
+		innerHTML += "<img onload='injectImage(event, \""+msg.inlineImg+"\", \""+msg.mime+"\");' onclick='showBigImage(\""+msg.inlineImg+"\", \""+msg.mime+"\");' class='inlineImg' src='./media/loading.gif' />";
 	} else if (msg.inlineVid != "" && msg.inlineVid != undefined) {
-		innerHTML += "<span onclick='showFloatingVideo(\""+msg.inlineVid+"\", \""+msg.mime+"\");' class='videoMsg'>Click here to play a video ("+(await getVidSize(msg.inlineVid)/1024**2).toFixed(2)+"MiB).</span>"
+		let vidSize = await getVidSize(msg.inlineVid);
+		if (vidSize > 0) {
+			vidSize = (vidSize/1024**2).toFixed(2);
+		}
+		innerHTML += "<span onclick='showFloatingVideo(\""+msg.inlineVid+"\", \""+msg.mime+"\");' class='videoMsg'>Click here to play a video ("+vidSize+"MiB).</span>";
 	}
 
 	innerHTML += "</div>";

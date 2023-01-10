@@ -9,6 +9,7 @@ extern crate serde_json;
 use libp2p::identity;
 use rand::Rng;
 use std::collections::HashMap;
+use std::env;
 use std::fs;
 use std::path::Path;
 use std::process::exit;
@@ -17,7 +18,7 @@ use tauri::api::process::CommandEvent;
 
 /* Modifiable settings */
 
-const REPO_PATH: &str = ".discochat";
+const REPO_PATH: &str = "disco-chat";
 
 /* -- Settings end  -- */
 
@@ -25,6 +26,28 @@ static mut API_PORT: u32 = 0;
 static mut SWARM_PORT: u32 = 0;
 static mut PRIV_KEY: String = String::new(); // These are both always assumed to be Ed25519
 static mut PUB_KEY: String = String::new();
+
+// get_data_dir returns the path to the data directory for this application
+fn get_data_dir() -> String {
+    if cfg!(target_os = "windows") {
+        let mut path = env::var("LOCALAPPDATA").unwrap();
+        path.push_str("\\");
+        path.push_str(REPO_PATH);
+        path
+    } else if cfg!(target_os = "linux") {
+        let mut path = env::var("HOME").unwrap();
+        path.push_str("/.");
+        path.push_str(REPO_PATH);
+        path
+    } else if cfg!(target_os = "macos") {
+        let mut path = env::var("HOME").unwrap();
+        path.push_str("/Library/Application Support/");
+        path.push_str(REPO_PATH);
+        path
+    } else {
+        panic!("Unsupported operating system");
+    }
+}
 
 // get_api_port returns the port that the API is listening on.
 #[tauri::command]
@@ -58,7 +81,7 @@ where
 	<I as IntoIterator>::Item: AsRef<str>,
 {
 	let mut init = Command::new_sidecar("kubo").unwrap();
-	init = init.args(["config", "--json", "--repo-dir", REPO_PATH]);
+	init = init.args(["config", "--json", "--repo-dir", &get_data_dir()]);
 	init = init.args(args);
 	init.output().unwrap();
 }
@@ -67,7 +90,7 @@ where
 fn set_keys() {
 	// Get our Public and Private keys
 	let config_file_contents =
-		fs::read_to_string(REPO_PATH.to_owned() + "/config").expect("Error reading file");
+		fs::read_to_string(get_data_dir() + "/config").expect("Error reading file");
 	// Deserialize the JSON string into a HashMap.
 	let map: HashMap<String, serde_json::Value> =
 		serde_json::from_str(&config_file_contents).expect("Error parsing JSON");
@@ -114,19 +137,19 @@ async fn main() {
 	}
 
 	// Repo not found? Make a new one!
-	if !Path::new(REPO_PATH).is_dir() {
+	if !Path::new(&get_data_dir()).is_dir() {
 		// Initialise the repo
-		// ipfs init --repo-dir REPO_PATH
+		// ipfs init --repo-dir &get_data_dir()
 		let mut init = Command::new_sidecar("kubo").unwrap();
-		init = init.args(["init", "--repo-dir", REPO_PATH]);
+		init = init.args(["init", "--repo-dir", &get_data_dir()]);
 		init.output().unwrap();
 
 		// Enable IPNS Pubsub (https://github.com/ipfs/kubo/blob/master/docs/experimental-features.md#ipns-pubsub)
-		// ipfs config --json --repo-dir REPO_PATH Ipns.UsePubsub true
+		// ipfs config --json --repo-dir &get_data_dir() Ipns.UsePubsub true
 		config_kubo(["Ipns.UsePubsub", "true"]);
 
 		// Disable local gateway
-		// ipfs config --json --repo-dir REPO_PATH Addresses.Gateway null
+		// ipfs config --json --repo-dir &get_data_dir() Addresses.Gateway null
 		config_kubo(["Addresses.Gateway", "null"]);
 	}
 
@@ -154,19 +177,19 @@ async fn main() {
 	set_keys();
 
 	// Allow tauri://localhost to control our daemon
-	// ipfs config --json --repo-dir REPO_PATH API.HTTPHeaders.Access-Control-Allow-Origin ["tauri://localhost"]
+	// ipfs config --json --repo-dir &get_data_dir() API.HTTPHeaders.Access-Control-Allow-Origin ["tauri://localhost"]
 	config_kubo([
 		"API.HTTPHeaders.Access-Control-Allow-Origin",
 		"[\"tauri://localhost\",\"http://127.0.0.1:1430\"]",
 	]);
 
 	// Run the daemon
-	// ipfs daemon --repo-dir REPO_PATH --enable-gc --enable-pubsub-experiment
+	// ipfs daemon --repo-dir &get_data_dir() --enable-gc --enable-pubsub-experiment
 	let mut daemon = Command::new_sidecar("kubo").unwrap();
 	daemon = daemon.args([
 		"daemon",
 		"--repo-dir",
-		REPO_PATH,
+		&get_data_dir(),
 		"--enable-gc",
 		"--enable-pubsub-experiment",
 	]);

@@ -39,15 +39,18 @@ async function getVidSize(cid) {
 		return;
 	}
 	let total = -1;
-	for await (const file of ipfs.ls(cid)) {
-		if (file.size > 0) {
-			if (total < 0) {
-				total = file.size;
-			} else {
-				total += file.size;
+	// Gets the size of the video, returning -1 on timeout.
+	try {
+		for await (const file of ipfs.ls(cid, {timeout: 5000})) {
+			if (file.size > 0) {
+				if (total < 0) {
+					total = file.size;
+				} else {
+					total += file.size;
+				}
 			}
 		}
-	}
+	} catch {}
 	return total;
 }
 
