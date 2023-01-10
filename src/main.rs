@@ -180,7 +180,7 @@ async fn main() {
 	// ipfs config --json --repo-dir &get_data_dir() API.HTTPHeaders.Access-Control-Allow-Origin ["tauri://localhost"]
 	config_kubo([
 		"API.HTTPHeaders.Access-Control-Allow-Origin",
-		"[\"tauri://localhost\",\"http://127.0.0.1:1430\"]",
+		"[\"tauri://localhost\",\"http://127.0.0.1:1430\",\"https://tauri.localhost\"]",
 	]);
 
 	// Run the daemon
