@@ -33,6 +33,12 @@ jobs:
         run: |
           bash fetch-kubo.sh
           npm install && npm run build
+      - name: Compress kubo
+        uses: svenstaro/upx-action@v2
+        with:
+          file: bin/*
+          args: --best --lzma
+          strip: true
       - uses: tauri-apps/tauri-action@dev
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
