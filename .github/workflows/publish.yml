@@ -11,9 +11,9 @@ jobs:
       matrix:
         include:
           - platform: ubuntu-20.04
-            file: bin/kubo-x86_64-unknown-linux
+            file: bin/kubo-x86_64-unknown-linux-gnu
           - platform: windows-latest
-            file: bin/kubo-x86_64-pc-windows.exe
+            file: bin/kubo-x86_64-pc-windows-msvc.exe
           - platform: macos-latest
             file: bin/kubo-x86_64-apple-darwin
 
@@ -44,7 +44,7 @@ jobs:
         with:
           file: ${{ matrix.file }}
           args: --best --lzma
-          strip: true
+          strip: false
       - uses: tauri-apps/tauri-action@dev
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
