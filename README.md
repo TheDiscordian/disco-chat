@@ -15,7 +15,7 @@ If you run into any problems please reach out to [our community](https://docs.ip
 
 ## Getting the binaries
 
-We don't currently have any binaries, but are working on getting them out. Below are instructions on how to build the application from source.
+Check out our [Releases](https://github.com/TheDiscordian/disco-chat/releases) page for pre-built binaries for Linux, Windows, and MacOS.
 
 ## Requirements
 
