@@ -10,11 +10,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-20.04
+          - platform: ubuntu-20.04
             file: bin/kubo-x86_64-unknown-linux
-          - os: windows-latest
+          - platform: windows-latest
             file: bin/kubo-x86_64-pc-windows.exe
-          - os: macos-latest
+          - platform: macos-latest
             file: bin/kubo-x86_64-apple-darwin
 
     runs-on: ${{ matrix.platform }}
