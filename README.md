@@ -58,8 +58,6 @@ If it doesn't work for you refer to the Windows instructions for how to obtain a
 
 #### Windows
 
-Warning: There be 🐉. While users have gotten Disco Chat running in WSL, no one has run it natively on Windows yet without WSL. If you get it working, a PR to this README would be *hugely* appreciated.
-
 Grab the appropriate [kubo binary](https://dist.ipfs.tech/#kubo). Ensure you extract the package, pulling the ipfs binary out. Then move it to `bin/` naming it according to [this guide](https://tauri.app/v1/guides/building/sidecar/)'s parameters (final name will be something like `kubo-x86_64-pc-windows-msvc.exe`, probably, check [here](https://doc.rust-lang.org/nightly/rustc/platform-support.html#tier-1-with-host-tools) if you can't figure out your triple).
 
 ## Run as Dev
