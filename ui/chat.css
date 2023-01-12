@@ -37,6 +37,34 @@ body {
 	cursor:pointer;
 }
 
+/* .loadingScreen fills the whole view */
+.loadingScreen {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background-color: #121212;
+	z-index: 100;
+}
+
+.loadingScreen p {
+	position: absolute;
+	top: 45%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.loadingScreen .progress {
+	top: calc(45% + 1.5em);
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 33%;
+	position: relative;
+	height: 0.5em;
+}
+
+
 /* when you click an image */
 .bigImage {
 	left: 50%;

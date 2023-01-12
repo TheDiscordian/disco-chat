@@ -275,6 +275,11 @@ async function changeChan(to, first) {
 	c.innerHTML = "";
 	let innerHTML = "";
 	let msgs = await getStoredMsgs(prefix+to);
+
+	let progressBar = document.getElementById("progressBar");
+	let progress = parseInt(progressBar.style.width.slice(0, -1));
+	let initialProgress = progress;
+
 	if (msgs != null && msgs.length > 0) {
 		if (maxMsgsToLoad != -1) {
 			if (msgs.length > maxMsgsToLoad) {
@@ -294,6 +299,11 @@ async function changeChan(to, first) {
 			}
 			innerHTML += await addMsg(msgs[i], monologue, false);
 			lastMsg = msgs[i].id;
+			if (progress < 100) {
+				console.log("progress: " + progress);
+				progress += (98-initialProgress)/msgsLoaded;
+				progressBar.style.width = progress+"%";
+			}
 		}
 		if (backlogLock == 0) {
 			await askForBacklog(to, lastMsgTimestampNotMe(msgs), "");

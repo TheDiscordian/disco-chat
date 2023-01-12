@@ -216,8 +216,20 @@ function lines2rows(ev) {
 	msgBox.rows = countLines(msgBox);
 }
 
+// updateProgress updates the progress bar in the loading screen, with a message, and will hide the loading screen if the progress is 100%.
+function updateProgress(percent, msg) {
+	let progressBar = document.getElementById("progressBar");
+	let loadingText = document.getElementById("loadingText");
+	progressBar.style.width = percent+"%";
+	loadingText.innerHTML = msg;
+	if (percent == 100) {
+		document.getElementById("loadingScreen").hidden = true;
+	}
+}
+
 // set this to body's onload function
 async function onload() {
+	updateProgress(0, "trusted users");
 	storedMap = await loadLocalItem("trustedPeerMap");
 	if (storedMap != null && storedMap != undefined && storedMap != "") {
 		if (storedMap.has == undefined) {
@@ -227,11 +239,13 @@ async function onload() {
 		trustedPeerMap = storedMap;
 	}
 	
+	updateProgress(1, "settings");
 	let _maxMsgsToStore = await localforage.getItem("maxMsgsToStore");
 	if (_maxMsgsToStore != null) { maxMsgsToStore = _maxMsgsToStore; }
 	let _maxMsgsToLoad = await localforage.getItem("maxMsgsToLoad");
 	if (_maxMsgsToLoad != null) { maxMsgsToLoad = _maxMsgsToLoad; }
 
+	updateProgress(2, "initialising kubo connection");
 	await INIT_IPFS();
 
 	// retrieve our keys
@@ -241,6 +255,7 @@ async function onload() {
 	_priv_key = Uint8Array.from(atob(priv), c => c.charCodeAt(0));
 	_pub_key = Uint8Array.from(atob(pub), c => c.charCodeAt(0));
 
+	updateProgress(3, "checking if Kubo is running yet");
 	// get our peerid
 	try {	
 		me = await ipfs.id();
@@ -250,6 +265,7 @@ async function onload() {
 	}
 	me = me.id.toString();	
 
+	updateProgress(5, "loading our profile");
 	storedNick = await loadLocalItem('nick');
 	if (storedNick != null) {
 		console.log(storedNick);
@@ -270,6 +286,7 @@ async function onload() {
 
 	document.getElementById("personalNickDisplay").onclick = function(event){showUserInfoBox(event, me)};
 
+	updateProgress(9, "joining rooms");
 	// join the rooms we were in on last run
 	storedRooms = await loadLocalItem('rooms');
 	if (storedRooms == null || storedRooms == "") {
@@ -283,11 +300,13 @@ async function onload() {
 		}
 	}
 
+	updateProgress(18, "backlog");
 	await changeChan(currentRoom, true);
 	await updateRoomList();
 	document.getElementById("roomJoinBtn").disabled = false;
 
 	updatePersonalNickDisplay();
+	updateProgress(98, "finishing up");
 
 	setInterval(checkalive, 1000);
 	// personal keep-alives
@@ -355,4 +374,5 @@ async function onload() {
 	});
 	
 	document.getElementById("version-display").innerHTML = version;
+	updateProgress(100, "complete");
 }
