@@ -300,7 +300,6 @@ async function changeChan(to, first) {
 			innerHTML += await addMsg(msgs[i], monologue, false);
 			lastMsg = msgs[i].id;
 			if (progress < 100) {
-				console.log("progress: " + progress);
 				progress += (98-initialProgress)/msgsLoaded;
 				progressBar.style.width = progress+"%";
 			}
