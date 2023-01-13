@@ -1,4 +1,4 @@
-const version = "v0.0.0";
+const version = "v0.2.1";
 const messageSizeLimit = 20480; // limit for length of message
 const userIconFileSizeLimit = 2097152; // limit for user icons
 const inlineImageFileSizeLimit = 10485760; // limit for inline images
@@ -265,7 +265,7 @@ async function onload() {
 	}
 	me = me.id.toString();	
 
-	updateProgress(5, "loading our profile");
+	updateProgress(5, "your profile");
 	storedNick = await loadLocalItem('nick');
 	if (storedNick != null) {
 		console.log(storedNick);
